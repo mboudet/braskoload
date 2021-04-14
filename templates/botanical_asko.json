@@ -1,0 +1,16 @@
+{
+    "columns": [
+        "starting_entity", 
+        "text", 
+        "directed_relation", 
+        "decimal", 
+        "text"
+    ],
+    "headers": [
+        "Botanical_id", 
+        "Botanical name", 
+        "Population_id@Population", 
+        "Frequency", 
+        "Remarks"
+    ]
+}

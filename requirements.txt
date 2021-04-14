@@ -1,0 +1,4 @@
+askoclics
+pandas
+openpyxl
+odfpy

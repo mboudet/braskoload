@@ -1,0 +1,20 @@
+{
+    "columns": [
+        "starting_entity",
+        "directed_relation", 
+        "text", 
+        "category"
+    ],
+    "headers": [
+        "Picture", 
+        "Population_id@Population", 
+        "Filename", 
+        "Picture Type"
+    ]
+}
+
+
+
+
+
+
