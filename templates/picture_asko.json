@@ -1,7 +1,7 @@
 {
     "columns": [
-        "starting_entity",
-        "directed_relation", 
+        "start_entity",
+        "general_relation", 
         "text", 
         "category"
     ],
