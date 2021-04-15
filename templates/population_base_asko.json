@@ -1,0 +1,30 @@
+{
+    "columns": [
+        "start_entity",
+        "date",
+        "text",
+        "category",
+        "text",
+        "text",
+        "text",
+        "text",
+        "text",
+        "numeric",
+        "category",
+        "category"
+    ],
+    "headers": [
+        "Population",
+        "Sampling date",
+        "Collector",
+        "Country",
+        "Region",
+        "Province",
+        "Locality",
+        "Town",
+        "GPS",
+        "Altitude",
+        "Studied Species",
+        "Partner"
+    ]
+}

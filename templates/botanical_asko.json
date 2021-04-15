@@ -5,6 +5,7 @@
         "text", 
         "numeric", 
         "text"
+
     ],
     "headers": [
         "Botanical_population", 
