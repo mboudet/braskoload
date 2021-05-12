@@ -22,7 +22,7 @@ def get_files(pattern, root_path):
     for path, names in file_dict.items():
         latest_file = max([os.path.join(path, name) for name in names], key=os.path.getctime)
         head, tail = os.path.split(latest_file)
-        filtered_file_dict[head] = tail
+        filtered_file_dict[head] = {"file": tail, "time": os.path.getctime(latest_file)}
     return filtered_file_dict
 
 def convert_file(file_path, temp_path, entity_dict, subset={}, add_id="", entity_name="", asko_client=None):
@@ -93,19 +93,38 @@ def integrate_asko(asko_client, file_name, json_data):
     if file_id:
         asko_client.file.integrate_csv(file_id, columns=json_data["columns"], headers=json_data["headers"])
 
-def cleanup(asko_client):
-    files = glob.glob('tmp/*')
-    for f in files:
-        os.remove(f)
+def asko_cleanup(asko_client, data):
 
-    datasets = [dataset['id'] for dataset in asko_client.dataset.list()]
-    files = [file['id'] for file in asko_client.file.list()]
+    datasets = asko_client.dataset.list()
+    files = asko_client.file.list()
 
-    if datasets:
-        asko_client.dataset.delete(datasets)
-    if files:
-        asko_client.file.delete(files)
+    names_to_delete = []
+    files_to_delete = []
+    keys_to_delete = []
 
+    for key, value in data.items():
+        file_name = value["file"].replace(".ods", ".csv")
+        for file in files:
+            if file["name"] == file_name:
+                if file["date"] < value["time"]:
+                    files_to_delete.append(file["id"])
+                    names_to_delete.append(file_name)
+                    print("Deleting remote obsolete file " + file_name)
+                else:
+                    print("Skipping older local file " + file_name)
+                    keys_to_delete.append(key)
+
+    datasets_to_delete = [dataset["id"] for dataset in datasets if dataset["name"] in names_to_delete]
+    
+    if datasets_to_delete:
+        asko_client.dataset.delete(datasets_to_delete)
+    if files_to_delete:
+        asko_client.file.delete(files_to_delete)
+
+    if keys_to_delete:
+        for key in keys_to_delete:
+            data.pop(key, None)
+    return data
 
 def main():
 
@@ -131,12 +150,18 @@ def main():
     }
 
     asko_client = askoclics.AskomicsInstance(url="http://192.168.100.87", api_key="D3mUETv2KM9C94UEsyXr")
-    cleanup(asko_client)
+    # Cleanup
+    files = glob.glob('tmp/*')
+    for f in files:
+        os.remove(f)
 
     entity_dict = {}
     for pattern, validation_files in patterns.items():
         data = get_files(pattern, "/groups/brassica/db/projects/BrasExplor")
-        for path, filename in data.items():
+        data = asko_cleanup(asko_client, data)
+
+        for path, file in data.items():
+            filename = file["file"]
             base_name = filename.replace(".ods", "")
             new_file_name = filename.replace(".ods", ".csv")
             with open(validation_files["integration"]) as datafile:
