@@ -1,6 +1,7 @@
 {
     "columns": [
         "start_entity",
+        "numeric",
         "general_relation",
         "category",
         "text",
@@ -36,6 +37,7 @@
     ],
     "headers": [
         "Landrace Population",
+        "id",
         "Population_id@Population",
         "Place",
         "Origin",

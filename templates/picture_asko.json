@@ -1,12 +1,14 @@
 {
     "columns": [
         "start_entity",
+        "numeric",
         "general_relation", 
         "text", 
         "category"
     ],
     "headers": [
         "Picture", 
+        "id",
         "Population_id@Population", 
         "Filename", 
         "Picture Type"

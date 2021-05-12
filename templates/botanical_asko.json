@@ -1,6 +1,7 @@
 {
     "columns": [
         "start_entity", 
+        "numeric",
         "general_relation", 
         "text", 
         "numeric", 
@@ -8,7 +9,8 @@
 
     ],
     "headers": [
-        "Botanical_population", 
+        "Botanical density", 
+        "id",
         "Population_id@Population", 
         "Botanical name", 
         "Frequency", 

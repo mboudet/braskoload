@@ -1,6 +1,7 @@
 {
     "columns": [
         "start_entity",
+        "numeric",
         "general_relation",
         "numeric",
         "numeric",
@@ -40,6 +41,7 @@
     ],
     "headers": [
         "Wild Population",
+        "id",
         "Population_id@Population",
         "Area",
         "Plant density",
