@@ -1,0 +1,81 @@
+version: "3.4"
+
+services:
+    askomics:
+        image: askomics/flaskomics:latest
+        env_file:
+            - askomics.env
+        volumes:
+            - ./output/askomics:/tmp/askomics
+
+    celery_askomics:
+        image: askomics/celery-flaskomics:latest
+        env_file:
+            - askomics.env
+        volumes:
+            - ./output/askomics:/tmp/askomics
+
+    virtuoso:
+        image: askomics/virtuoso:7.2.5.1
+        env_file:
+            - virtuoso.env
+        volumes:
+            - ./output/virtuoso:/data
+
+    isqlapi:
+        image: xgaia/isql-api:2.1.1
+        environment:
+            WORKER_NUMBER: 20
+            ISQL_API_VIRTUOSO_DSN: virtuoso
+            VIRTUOSO_HOST: virtuoso
+            VIRTUOSO_ISQL_PORT: 1111
+            ISQL_API_VIRTUOSO_USERNAME: dba
+            ISQL_API_VIRTUOSO_PASSWORD: rlHesft1Q
+
+    redis:
+        image: redis:4.0
+
+    nginx:
+        image: nginx:1.17
+        volumes:
+            - ./nginx.conf:/tmp/nginx.conf
+            - ./output/nginx/log:/var/log/nginx
+        ports:
+            - "80:80"
+        env_file:
+            - nginx.env
+        command: /bin/bash -c "envsubst < /tmp/nginx.conf > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+
+    golink:
+        build: /root/golink/
+        depends_on:
+            - golink-redis
+            - db
+        volumes:
+            - ./golink.cfg:/golink/local.cfg:ro
+            - ./repos.yml:/etc/golink/repos.yml:ro
+            - repos:/repos/
+
+    golink-worker:
+        build:
+            context: /root/golink/
+            dockerfile: /root/golink/docker_celery/Dockerfile
+        depends_on:
+            - golink-redis
+            - db
+        volumes:
+            - ./golink.cfg:/golink/local.cfg:ro
+            - ./repos.yml:/etc/golink/repos.yml:ro
+            - repos:/repos/
+
+    golink-redis:
+        image: redis:4.0
+
+    db:
+        image: postgres:11-alpine
+        environment:
+          POSTGRES_PASSWORD: postgres
+
+volumes:
+    # A volume shared between golink app and worker
+    repos:
