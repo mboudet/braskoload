@@ -37,6 +37,9 @@ services:
 
     nginx:
         image: nginx:1.17
+        depends_on:
+            - golink
+            - askomics
         volumes:
             - ./nginx.conf:/tmp/nginx.conf
             - ./output/nginx/log:/var/log/nginx
@@ -53,8 +56,10 @@ services:
             - db
         volumes:
             - ./golink.cfg:/golink/local.cfg:ro
-            - ./repos.yml:/etc/golink/repos.yml:ro
+            - ./repos.yml:/golink/repos.yml:ro
             - repos:/repos/
+        environment:
+            - LOG_FOLDER=/var/log/golink
 
     golink-worker:
         build:
@@ -65,7 +70,7 @@ services:
             - db
         volumes:
             - ./golink.cfg:/golink/local.cfg:ro
-            - ./repos.yml:/etc/golink/repos.yml:ro
+            - ./repos.yml:/golink/repos.yml:ro
             - repos:/repos/
 
     golink-redis:

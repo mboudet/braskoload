@@ -1,0 +1,4 @@
+/repos/myrepo:
+    has_baricadr: False
+    allowed_users: []
+    allowed_groups: []
