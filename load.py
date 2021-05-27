@@ -7,6 +7,7 @@ from urllib.parse import quote
 import pandas
 import numpy as np
 import askoclics
+import gopublic
 
 # Get list of files matching pattern, keeping the latest one when there are two in the same folder
 def get_files(pattern, root_path):
@@ -25,7 +26,7 @@ def get_files(pattern, root_path):
         filtered_file_dict[head] = {"file": tail, "time": os.path.getctime(latest_file)}
     return filtered_file_dict
 
-def convert_file(file_path, temp_path, entity_dict, subset={}, add_id="", entity_name="", asko_client=None):
+def convert_file(file_path, temp_path, entity_dict, subset={}, add_id="", entity_name="", asko_client=None, gopublic_data=None):
     # add_id must be a dict, containing a column name with key "column", and optional list of values added (key "values")
     df = pandas.read_excel(file_path, sheet_name=2)
     if len(df) == 0:
@@ -75,6 +76,18 @@ def get_current_uri(asko_client, entity_name):
         return 0
     else:
         return int(result["data"][0]["output_var"]) + 1
+
+def get_file_uri(gopublic_data, file_path):
+    gopublic_client = gopublic_data['client']
+    token = gopublic_client['token']
+    base_url = gopublic_client['base_url']
+    file_name = os.path.basename(file_path)
+    data = gopublic_client.file.search(file_name)
+    if data:
+        return base_url + data[0]["uri"]
+
+    data = gopublic_client.file.publish(file_path, token=token)
+    return return base_url + data["file_id"]
 
 
 def upload_asko(asko_client, file_path):
@@ -149,7 +162,13 @@ def main():
         }
     }
 
-    asko_client = askoclics.AskomicsInstance(url="http://192.168.100.87", api_key="D3mUETv2KM9C94UEsyXr")
+    gopublic_data = {
+        "client": gopublic.GopublishInstance(url="", username="", password=""),
+        "token": "",
+        "base_url": ""
+    }
+
+    asko_client = askoclics.AskomicsInstance(url="http://192.168.100.87", api_key="")
     # Cleanup
     files = glob.glob('tmp/*')
     for f in files:
@@ -182,7 +201,7 @@ def main():
 
             new_id = validation_files.get("new_id", "")
 
-            res, entity_dict = convert_file(os.path.join(path, filename), os.path.join("tmp/", new_file_name), entity_dict, subset=subset, add_id=new_id, entity_name=entity_name, asko_client=asko_client)
+            res, entity_dict = convert_file(os.path.join(path, filename), os.path.join("tmp/", new_file_name), entity_dict, subset=subset, add_id=new_id, entity_name=entity_name, asko_client=asko_client, gopublic_data=gopublic_data)
 
             if res:
                 if subset:
