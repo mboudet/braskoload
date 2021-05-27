@@ -43,6 +43,7 @@ services:
         volumes:
             - ./nginx.conf:/tmp/nginx.conf
             - ./output/nginx/log:/var/log/nginx
+            - ./.htpasswd:/etc/nginx/.htpasswd
         ports:
             - "80:80"
         env_file:
