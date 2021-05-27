@@ -7,6 +7,17 @@ services:
             - askomics.env
         volumes:
             - ./output/askomics:/tmp/askomics
+        network:
+            - askomics_braskomics
+        deploy:
+          placement:
+            constraints:
+              - "node.hostname==dogogepp4"
+          restart_policy:
+            condition: on-failure
+            delay: 5s
+            max_attempts: 3
+            window: 120s
 
     celery_askomics:
         image: askomics/celery-flaskomics:latest
@@ -14,6 +25,17 @@ services:
             - askomics.env
         volumes:
             - ./output/askomics:/tmp/askomics
+        network:
+            - askomics_braskomics
+        deploy:
+          placement:
+            constraints:
+              - "node.hostname==dogogepp4"
+          restart_policy:
+            condition: on-failure
+            delay: 5s
+            max_attempts: 3
+            window: 120s
 
     virtuoso:
         image: askomics/virtuoso:7.2.5.1
@@ -21,6 +43,17 @@ services:
             - virtuoso.env
         volumes:
             - ./output/virtuoso:/data
+        network:
+            - askomics_braskomics
+        deploy:
+          placement:
+            constraints:
+              - "node.hostname==dogogepp4"
+          restart_policy:
+            condition: on-failure
+            delay: 5s
+            max_attempts: 3
+            window: 120s
 
     isqlapi:
         image: xgaia/isql-api:2.1.1
@@ -31,9 +64,31 @@ services:
             VIRTUOSO_ISQL_PORT: 1111
             ISQL_API_VIRTUOSO_USERNAME: dba
             ISQL_API_VIRTUOSO_PASSWORD: rlHesft1Q
+        network:
+            - askomics_braskomics
+        deploy:
+          placement:
+            constraints:
+              - "node.hostname==dogogepp4"
+          restart_policy:
+            condition: on-failure
+            delay: 5s
+            max_attempts: 3
+            window: 120s
 
     redis:
         image: redis:4.0
+        network:
+            - askomics_braskomics
+        deploy:
+          placement:
+            constraints:
+              - "node.hostname==dogogepp4"
+          restart_policy:
+            condition: on-failure
+            delay: 5s
+            max_attempts: 3
+            window: 120s
 
     nginx:
         image: nginx:1.17
@@ -49,23 +104,45 @@ services:
         env_file:
             - nginx.env
         command: /bin/bash -c "envsubst < /tmp/nginx.conf > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+        network:
+            - askomics_braskomics
+        deploy:
+          placement:
+            constraints:
+              - "node.hostname==dogogepp4"
+          restart_policy:
+            condition: on-failure
+            delay: 5s
+            max_attempts: 3
+            window: 120s
 
     golink:
-        build: /root/golink/
+        image: quay.io/mboudet/golink
         depends_on:
             - golink-redis
             - db
         volumes:
             - ./golink.cfg:/golink/local.cfg:ro
             - ./repos.yml:/golink/repos.yml:ro
-            - repos:/repos/
+            - /groups/brassica/db/projects/BrasExplor/:/groups/brassica/db/projects/BrasExplor/:ro
+            - /groups/arch_igepp/brassica/prima_BrasExplor_2020/raw_data/sequences/:/groups/arch_igepp/brassica/prima_BrasExplor_2020/raw_data/sequences/:ro
+            
         environment:
             - LOG_FOLDER=/var/log/golink
+        network:
+            - askomics_braskomics
+        deploy:
+          placement:
+            constraints:
+              - "node.hostname==dogogepp4"
+          restart_policy:
+            condition: on-failure
+            delay: 5s
+            max_attempts: 3
+            window: 120s
 
     golink-worker:
-        build:
-            context: /root/golink/
-            dockerfile: /root/golink/docker_celery/Dockerfile
+        image: quay.io/mboudet/golink
         depends_on:
             - golink-redis
             - db
@@ -73,15 +150,53 @@ services:
             - ./golink.cfg:/golink/local.cfg:ro
             - ./repos.yml:/golink/repos.yml:ro
             - repos:/repos/
+            - /groups/brassica/db/projects/BrasExplor/:/groups/brassica/db/projects/BrasExplor/:ro
+            - /groups/arch_igepp/brassica/prima_BrasExplor_2020/raw_data/sequences/:/groups/arch_igepp/brassica/prima_BrasExplor_2020/raw_data/sequences/:ro
+        network:
+            - askomics_braskomics
+        deploy:
+          placement:
+            constraints:
+              - "node.hostname==dogogepp4"
+          restart_policy:
+            condition: on-failure
+            delay: 5s
+            max_attempts: 3
+            window: 120s
 
     golink-redis:
         image: redis:4.0
+        network:
+            - askomics_braskomics
+        deploy:
+          placement:
+            constraints:
+              - "node.hostname==dogogepp4"
+          restart_policy:
+            condition: on-failure
+            delay: 5s
+            max_attempts: 3
+            window: 120s
 
     db:
         image: postgres:11-alpine
         environment:
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: postgres 
+        network:
+            - askomics_braskomics
+        deploy:
+          placement:
+            constraints:
+              - "node.hostname==dogogepp4"
+          restart_policy:
+            condition: on-failure
+            delay: 5s
+            max_attempts: 3
+            window: 120s
 
-volumes:
-    # A volume shared between golink app and worker
-    repos:
+networks: 
+    traefikbig: 
+        external: true 
+    askomics_braskomics: 
+        driver: overlay 
+        name: askomics_braskomics
