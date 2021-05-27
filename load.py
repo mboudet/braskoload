@@ -26,9 +26,10 @@ def get_files(pattern, root_path):
         filtered_file_dict[head] = {"file": tail, "time": os.path.getctime(latest_file)}
     return filtered_file_dict
 
-def convert_file(file_path, temp_path, entity_dict, subset={}, add_id="", entity_name="", asko_client=None, gopublic_data=None):
+def convert_file(file_path, temp_path, entity_dict, subset={}, add_id="", entity_name="", asko_client=None, gopublic_data=None, paths=[], sheet=0):
     # add_id must be a dict, containing a column name with key "column", and optional list of values added (key "values")
-    df = pandas.read_excel(file_path, sheet_name=2)
+    df = pandas.read_excel(file_path, sheet_name=sheet)
+    col_to_del = set()
     if len(df) == 0:
         return False, entity_dict
 
@@ -50,6 +51,16 @@ def convert_file(file_path, temp_path, entity_dict, subset={}, add_id="", entity
 
         df["tmp_col_uri"] = df["tmp_col_uri"] + np.arange(entity_dict[add_id], len(df) + entity_dict[add_id]).astype(str)
         entity_dict[add_id] += len(df)
+
+    for path in paths:
+        if path.get("base"):
+            df[path["col"]] = df[[path["base"], path["col"]]].agg('/'.join, axis=1)
+            if path.get("delete_base"):
+                col_to_del.add(path["base"])
+
+
+    for col in col_to_del:
+        df = df.drop(col, 1)
 
     df.to_csv(temp_path, index=False, sep="\t")
     return True, entity_dict
@@ -96,7 +107,7 @@ def upload_asko(asko_client, file_path):
 def integrate_asko(asko_client, file_name, json_data):
     files = asko_client.file.list()
     file_id = None
-    
+
     for file in files:
         if file["name"] == file_name:
             if not file_id:
@@ -128,7 +139,7 @@ def asko_cleanup(asko_client, data):
                     keys_to_delete.append(key)
 
     datasets_to_delete = [dataset["id"] for dataset in datasets if dataset["name"] in names_to_delete]
-    
+
     if datasets_to_delete:
         asko_client.dataset.delete(datasets_to_delete)
     if files_to_delete:
@@ -143,22 +154,32 @@ def main():
 
     patterns = {
         "Population_description*W.ods": {
+            "sheet": 2,
             "integration": "templates/population_wild_asko.json",
             "subset": {"column": "Altitude", "integration": "templates/population_base_asko.json", "add_column": True},
             "new_id": "wild_population"
         },
         "Population_description*L.ods": {
+            "sheet": 2,
             "integration": "templates/population_lr_asko.json",
             "subset": {"column": "Altitude", "integration": "templates/population_base_asko.json", "add_column": True},
             "new_id": "landrace_population"
         },
         "Botanical_species*.ods": {
+            "sheet": 2,
             "integration": "templates/botanical_asko.json",
             "new_id": "botanical_density"
         },
         "Pictures*.ods": {
+            "sheet": 2,
             "integration": "templates/picture_asko.json",
             "new_id": "picture"
+        },
+        "test_asko.ods": {
+            "sheet": 0,
+            "integration": "templates/sequence_asko.json",
+            "new_id": "sequence",
+            "paths": [{"col": "Nom fichier read R1", "base": "Chemin stockage séquences bulks sur Genouest", "delete_base": True}, {"col":"Nom fichier read R2", "base": "Chemin stockage séquences bulks sur Genouest" , "delete_base": True}]
         }
     }
 
@@ -176,7 +197,11 @@ def main():
 
     entity_dict = {}
     for pattern, validation_files in patterns.items():
-        data = get_files(pattern, "/groups/brassica/db/projects/BrasExplor")
+        if pattern == "test_asko.ods":
+            data = get_files(pattern, "/home/genouest/genouest/mboudet/test_asko")
+        else:
+            data = get_files(pattern, "/groups/brassica/db/projects/BrasExplor")
+
         data = asko_cleanup(asko_client, data)
 
         for path, file in data.items():
@@ -199,9 +224,12 @@ def main():
                 subset["add_columns"] = new_columns
                 subset["temp_path"] = os.path.join("tmp/", new_file_name.replace(".csv", "_base.csv"))
 
+            paths = validation_files.get("paths", [])
+            sheet = validation_files.get("sheet", 0)
+
             new_id = validation_files.get("new_id", "")
 
-            res, entity_dict = convert_file(os.path.join(path, filename), os.path.join("tmp/", new_file_name), entity_dict, subset=subset, add_id=new_id, entity_name=entity_name, asko_client=asko_client, gopublic_data=gopublic_data)
+            res, entity_dict = convert_file(os.path.join(path, filename), os.path.join("tmp/", new_file_name), entity_dict, subset=subset, add_id=new_id, entity_name=entity_name, asko_client=asko_client, gopublic_data=gopublic_data, paths=paths, sheet=sheet)
 
             if res:
                 if subset:
