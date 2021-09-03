@@ -42,6 +42,7 @@ class Datafile():
             for key, value in subset.items():
                 current_args[key] = value
                 current_args.pop('subset', None)
+                current_args.pop('self', None)
             self.subdatafile = Datafile(**current_args)
 
     def get_files(self):
@@ -99,8 +100,8 @@ class Datafile():
             self.subdatafile.cleanup_askomics()
 
     def convert_files(self):
-        for path, file in self.files.keys():
-            self._convert_file(path, file)
+        for path, file in self.files.items():
+            self._convert_file(path, file['file'])
 
         if self.subdatafile:
             self.subdatafile.convert_files()
@@ -110,7 +111,7 @@ class Datafile():
             self.askomics_client.file.upload(file_path=file_path)
 
         if self.subdatafile:
-            self.subdatafile.upload_asko()
+            self.subdatafile.upload_files()
 
     def integrate_files(self):
         uploaded_files = set([os.path.basename(file) for file in self.files_to_integrate])
@@ -124,7 +125,7 @@ class Datafile():
             self.askomics_client.file.integrate_csv(id, columns=self.integration_template["columns"], headers=self.integration_template["headers"])
 
         if self.subdatafile:
-            self.subdatafile.integrate_asko()
+            self.subdatafile.integrate_files()
 
     def _convert_file(self, file_path, file_name):
         # add_id must be a dict, containing a column name with key "column", and optional list of values added (key "values")
@@ -143,18 +144,18 @@ class Datafile():
             if column.get("before") and column.get("after"):
                 before_loc = df.columns.get_loc(column.get("before"))
                 after_loc = df.columns.get_loc(column.get("after"))
-                df = df.loc[:, before_loc:after_loc]
+                df = df.loc[:, before_loc:after_loc + 1]
             else:
                 if column.get("before"):
                     loc = df.columns.get_loc(column.get("before"))
-                    df = df.loc[:, loc:]
+                    df = df.iloc[:, loc:]
                 if column.get("after"):
                     loc = df.columns.get_loc(column.get("after"))
-                    df = df.loc[:, :loc]
+                    df = df.iloc[:, :loc + 1]
             if column.get("between"):
                 before_loc = df.columns.get_loc(column.get("between")[0])
                 after_loc = df.columns.get_loc(column.get("between")[1])
-                df = df.drop(df.iloc[:, before_loc + 1:after_loc - 1], 1)
+                df = df.drop(df.iloc[:, before_loc + 1:after_loc], 1)
 
         added_column = 0
         for col in convert_data.get("add_columns", []):
@@ -162,9 +163,9 @@ class Datafile():
             if col.get("from_path"):
                 value = file_path.split("/")[col.get("from_path")]
             if col.get("replace"):
-                value.replace(col.get("replace")[0], col.get("replace")[1])
+                value = value.replace(col.get("replace")[0], col.get("replace")[1])
             if value:
-                df["temp_add_column_" + added_column] = value
+                df["temp_add_column_" + str(added_column)] = value
                 added_column += 1
 
         if convert_data.get("new_uri"):
@@ -189,7 +190,7 @@ class Datafile():
         for col in col_to_del:
             df = df.drop(col, 1)
 
-        if convert_data['replace_name']:
+        if convert_data.get('replace_name'):
             file_name = file_name.replace(convert_data['replace_name'][0], convert_data['replace_name'][1])
         else:
             file_name = file_name.replace(".ods", ".csv")
@@ -239,5 +240,5 @@ class Datafile():
             print("Missing file {}".format(file_path))
             return file_path
 
-        data = gopublic_client.file.publish(file_path, token=token)
+        #data = gopublic_client.file.publish(file_path, token=token)
         return base_url + data["file_id"]

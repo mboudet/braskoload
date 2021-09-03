@@ -5,45 +5,60 @@ import glob
 import askoclics
 import gopublic
 
-from braskoload.braskolib.datafile import Datafile
+import configparser
+
+from braskolib.datafile import Datafile
 
 
 def main():
 
+    config = configparser.ConfigParser()
+    config.read("braskoload.conf")
+
     gopublish_data = {
-        "client": gopublic.GopublishInstance(url="", username="", password=""),
-        "token": "",
-        "base_url": ""
+        "client": gopublic.GopublishInstance(url=config['gopublish']['url'], proxy_username=config['gopublish'].get('proxy_username'), proxy_password=config['gopublish'].get('proxy_password')),
+        "token": config['gopublish']['token'],
+        "base_url": config['gopublish']['base_url']
     }
 
-    asko_client = askoclics.AskomicsInstance(url="http://192.168.100.87", api_key="")
+    asko_client = askoclics.AskomicsInstance(url=config['askomics']['url'], api_key=config['askomics']['api_key'], proxy_username=config['askomics'].get('proxy_username'), proxy_password=config['askomics'].get('proxy_password'))
 
-    temp_folder = "tmp/"
+    temp_folder = config['main']['temp_folder']
 
     datafiles = [
         Datafile(
           pattern="Population_description*W.ods",
           integration_file="templates/population_wild_asko.json",
-          conversion_data={"sheet": 2, "new_uri": "wild_population", "drop_columns": {"between": ["Population name", "Area (1)"]}},
+          conversion_data={"sheet": 2, "new_uri": "wild_population", "drop_columns": [{"between": ["Population name", "Area (1)"]}]},
           search_folder="/groups/brassica/db/projects/BrasExplor",
           temp_folder=temp_folder,
           askomics_client=asko_client,
           subset={
             "integration_file": "templates/population_base_asko.json",
             "conversion_data": {
-                "replace_name": [".csv", "_base.csv"],
-                "add_columns": [{"from_path": -2, "convert": ["_", " "]}, {"from_path": -3}],
-                "drop_columns": {"after": "Altitude"}
+                "sheet": 2,
+                "replace_name": [".ods", "_base.csv"],
+                "add_columns": [{"from_path": -2, "replace": ["_", " "]}, {"from_path": -3}],
+                "drop_columns": [{"after": "Altitude"}]
             }
           }
         ),
         Datafile(
           pattern="Population_description*L.ods",
           integration_file="templates/population_lr_asko.json",
-          conversion_data={"sheet": 2, "new_uri": "landrace_population"},
+          conversion_data={"sheet": 2, "new_uri": "landrace_population", "drop_columns": [{"between": ["Population name", "Area (1)"]}]},
           search_folder="/groups/brassica/db/projects/BrasExplor",
           temp_folder=temp_folder,
-          askomics_client=asko_client
+          askomics_client=asko_client,
+          subset={
+            "integration_file": "templates/population_base_asko.json",
+            "conversion_data": {
+                "sheet": 2,
+                "replace_name": [".ods", "_base.csv"],
+                "add_columns": [{"from_path": -2, "replace": ["_", " "]}, {"from_path": -3}],
+                "drop_columns": [{"after": "Altitude"}]
+            }
+          }
         ),
         Datafile(
           pattern="Botanical_species*.ods",
@@ -63,9 +78,9 @@ def main():
         ),
         Datafile(
           pattern="test_asko.ods",
-          integration_file="/home/genouest/genouest/mboudet/test_asko",
+          integration_file="templates/sequence_asko.json",
           conversion_data={"new_uri": "sequence"},
-          search_folder="/groups/brassica/db/projects/BrasExplor",
+          search_folder="/home/genouest/genouest/mboudet/test_asko",
           temp_folder=temp_folder,
           askomics_client=asko_client,
           gopublish_data=gopublish_data,
@@ -92,8 +107,8 @@ def main():
         datafile.get_files()
         datafile.cleanup_askomics()
         datafile.convert_files()
-        # datafile.upload_files()
-        # datafile.integrate_files()
+        datafile.upload_files()
+        datafile.integrate_files()
 
 
 if __name__ == "__main__":
