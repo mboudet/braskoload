@@ -9,7 +9,8 @@ import numpy as np
 
 class Datafile():
 
-    def __init__(self, pattern, integration_file, conversion_data, search_folder, temp_folder, askomics_client, gopublish_data={}, data_files={}):
+    def __init__(self, pattern, integration_file, conversion_data, search_folder, temp_folder, askomics_client, gopublish_data={}, data_files={}, subset={}):
+        current_args = locals()
         self.pattern = pattern
         self.search_folder = search_folder
         self.data_files = data_files
@@ -20,14 +21,9 @@ class Datafile():
         self.files_to_integrate = []
         self.temp_folder = temp_folder
 
-        if any([file.get("gopublish", False) for file in self.data_files]) and not gopublish_data:
-            raise Exception("Requested file publication but gopublish_data is not set")
-
-        if "replace_name" in conversion_data and not len(conversion_data['replace_name']) == 2:
-            raise Exception("replace_name must contain two values: the current string, and the string to replace")
         # Conversion data: Dict with keys:
         # sheet: 0 (optional, default to 0)
-        # add_columns: {"values": ["XXX"], "from_path": ["XXX"]}
+        # add_columns: [{"value": ["XXX"], "from_path": ["XXX"]}, "convert":[]]
         # drop_columns: [{column: "XXX", "before": "xxx", "after":xxx}]
         # new_uri: 'base_id_uri'
         # temp_base_name: "xxx"
@@ -39,6 +35,14 @@ class Datafile():
         self.files = {}
         self.files_to_integrate = []
         self.latest_entity = False
+        self.subdatafile = None
+
+        # Create a subdatafile with current parameters modified
+        if subset:
+            for key, value in subset.items():
+                current_args[key] = value
+                current_args.pop('subset', None)
+            self.subdatafile = Datafile(**current_args)
 
     def get_files(self):
         file_dict = {}
@@ -56,6 +60,9 @@ class Datafile():
             filtered_file_dict[head] = {"file": tail, "time": os.path.getctime(latest_file)}
 
         self.files = filtered_file_dict
+
+        if self.subdatafile:
+            self.subdatafile.get_files()
 
     def cleanup_askomics(self):
         datasets = self.askomics_client.dataset.list()
@@ -88,15 +95,24 @@ class Datafile():
             for key in keys_to_delete:
                 self.files.pop(key, None)
 
+        if self.subdatafile:
+            self.subdatafile.cleanup_askomics()
+
     def convert_files(self):
         for path, file in self.files.keys():
             self._convert_file(path, file)
 
-    def upload_asko(self):
+        if self.subdatafile:
+            self.subdatafile.convert_files()
+
+    def upload_files(self):
         for file_path in self.files_to_integrate:
             self.askomics_client.file.upload(file_path=file_path)
 
-    def integrate_asko(self):
+        if self.subdatafile:
+            self.subdatafile.upload_asko()
+
+    def integrate_files(self):
         uploaded_files = set([os.path.basename(file) for file in self.files_to_integrate])
         files = self.askomics_client.file.list()
         file_ids = set()
@@ -107,6 +123,9 @@ class Datafile():
         for id in file_ids:
             self.askomics_client.file.integrate_csv(id, columns=self.integration_template["columns"], headers=self.integration_template["headers"])
 
+        if self.subdatafile:
+            self.subdatafile.integrate_asko()
+
     def _convert_file(self, file_path, file_name):
         # add_id must be a dict, containing a column name with key "column", and optional list of values added (key "values")
         full_path = os.path.join(file_path, file_name)
@@ -116,14 +135,37 @@ class Datafile():
         if len(df) == 0:
             return
 
-        if self.subset:
-            index = df.columns.get_loc(self.subset["column"])
-            subdf = df.iloc[:, 0:index+1].copy()
-            for col in self.subset.get("add_columns", []):
-                subdf[col] = col
-            subdf.to_csv(self.subset["temp_path"], index=False, sep="\t")
-            self.files_to_integrate.append(self.subset["temp_path"])
-            df.drop(df.iloc[:, 1:index+1], inplace=True, axis=1)
+        # drop_columns: [{column: "XXX", "before": "xxx", "after":xxx}]
+        for column in convert_data.get("drop_columns", []):
+            if column.get("column"):
+                df = df.drop(column.get("column"), 1)
+
+            if column.get("before") and column.get("after"):
+                before_loc = df.columns.get_loc(column.get("before"))
+                after_loc = df.columns.get_loc(column.get("after"))
+                df = df.loc[:, before_loc:after_loc]
+            else:
+                if column.get("before"):
+                    loc = df.columns.get_loc(column.get("before"))
+                    df = df.loc[:, loc:]
+                if column.get("after"):
+                    loc = df.columns.get_loc(column.get("after"))
+                    df = df.loc[:, :loc]
+            if column.get("between"):
+                before_loc = df.columns.get_loc(column.get("between")[0])
+                after_loc = df.columns.get_loc(column.get("between")[1])
+                df = df.drop(df.iloc[:, before_loc + 1:after_loc - 1], 1)
+
+        added_column = 0
+        for col in convert_data.get("add_columns", []):
+            value = col.get("value")
+            if col.get("from_path"):
+                value = file_path.split("/")[col.get("from_path")]
+            if col.get("replace"):
+                value.replace(col.get("replace")[0], col.get("replace")[1])
+            if value:
+                df["temp_add_column_" + added_column] = value
+                added_column += 1
 
         if convert_data.get("new_uri"):
             if not self.latest_entity:
@@ -143,27 +185,6 @@ class Datafile():
             if path.get("gopublish"):
                 base_path = path.get("base_path")
                 df[path["col"]] = df[path["col"]].apply(lambda x: self._get_file_uri(self.gopublish_data, base_path, x))
-
-        # drop_columns: [{column: "XXX", "before": "xxx", "after":xxx}]
-        for column in convert_data.get("drop_columns", []):
-            if column.get("column"):
-                df = df.drop(column.get("column"), 1)
-
-            if column.get("before") and column.get("after"):
-                before_loc = df.columns.get_loc(column.get("before"))
-                after_loc = df.columns.get_loc(column.get("after"))
-                # Check for +1 needed
-                if before_loc > after_loc:
-                    df = df.drop(df.iloc[:, after_loc + 1:before_loc - 1], 1)
-                else:
-                    df = df.loc[:, before_loc:after_loc]
-            else:
-                if column.get("before"):
-                    loc = df.columns.get_loc(column.get("before"))
-                    df = df.loc[:, loc:]
-                if column.get("after"):
-                    loc = df.columns.get_loc(column.get("after"))
-                    df = df.loc[:, :loc]
 
         for col in col_to_del:
             df = df.drop(col, 1)
