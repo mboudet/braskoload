@@ -1,0 +1,24 @@
+{
+    "columns": [
+        "start_entity",
+        "numeric",
+        "general_relation",
+        "text",
+        "text",
+        "text"
+    ],
+    "headers": [
+        "Sequence",
+        "id",
+        "Extracted_from@Population",
+        "Offspring bulk code",
+        "Read1",
+        "Read2"
+    ]
+}
+
+
+
+
+
+

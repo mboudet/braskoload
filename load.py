@@ -27,34 +27,34 @@ def main():
 
     datafiles = [
         Datafile(
-          pattern="Population_description*W.ods",
-          integration_file="templates/population_wild_asko.json",
+          pattern="[!Forms]*/Population*W*.*",
+          integration_file="templates/askomics/population_wild_asko.json",
           conversion_data={"sheet": 2, "new_uri": "wild_population", "drop_columns": [{"between": ["Population name", "Area (1)"]}]},
           search_folder="/groups/brassica/db/projects/BrasExplor",
           temp_folder=temp_folder,
           askomics_client=asko_client,
           subset={
-            "integration_file": "templates/population_base_asko.json",
+            "integration_file": "templates/askomics/population_base_asko.json",
             "conversion_data": {
                 "sheet": 2,
-                "replace_name": [".ods", "_base.csv"],
+                "append_name": "_base",
                 "add_columns": [{"from_path": -2, "replace": ["_", " "]}, {"from_path": -3}],
                 "drop_columns": [{"after": "Altitude"}]
             }
           }
         ),
         Datafile(
-          pattern="Population_description*L.ods",
-          integration_file="templates/population_lr_asko.json",
+          pattern="'[!Forms]*/Population*L*.*'",
+          integration_file="templates/askomics/population_lr_asko.json",
           conversion_data={"sheet": 2, "new_uri": "landrace_population", "drop_columns": [{"between": ["Population name", "Area (1)"]}]},
           search_folder="/groups/brassica/db/projects/BrasExplor",
           temp_folder=temp_folder,
           askomics_client=asko_client,
           subset={
-            "integration_file": "templates/population_base_asko.json",
+            "integration_file": "templates/askomics/population_base_asko.json",
             "conversion_data": {
                 "sheet": 2,
-                "replace_name": [".ods", "_base.csv"],
+                "append_name": "_base",
                 "add_columns": [{"from_path": -2, "replace": ["_", " "]}, {"from_path": -3}],
                 "drop_columns": [{"after": "Altitude"}]
             }
@@ -62,7 +62,7 @@ def main():
         ),
         Datafile(
           pattern="Botanical_species*.ods",
-          integration_file="templates/botanical_asko.json",
+          integration_file="templates/askomics/botanical_asko.json",
           conversion_data={"sheet": 2, "new_uri": "botanical_density"},
           search_folder="/groups/brassica/db/projects/BrasExplor",
           temp_folder=temp_folder,
@@ -70,7 +70,7 @@ def main():
         ),
         Datafile(
           pattern="Pictures*.ods",
-          integration_file="templates/picture_asko.json",
+          integration_file="templates/askomics/picture_asko.json",
           conversion_data={"sheet": 2, "new_uri": "picture"},
           search_folder="/groups/brassica/db/projects/BrasExplor",
           temp_folder=temp_folder,
@@ -78,7 +78,7 @@ def main():
         ),
         Datafile(
           pattern="test_asko.ods",
-          integration_file="templates/sequence_asko.json",
+          integration_file="templates/askomics/sequence_asko.json",
           conversion_data={"new_uri": "sequence"},
           search_folder="/home/genouest/genouest/mboudet/test_asko",
           temp_folder=temp_folder,

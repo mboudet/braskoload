@@ -136,6 +136,9 @@ class Datafile():
         if len(df) == 0:
             return
 
+        # Remove unnamed column (empty columns not expected)
+        df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+
         # drop_columns: [{column: "XXX", "before": "xxx", "after":xxx}]
         for column in convert_data.get("drop_columns", []):
             if column.get("column"):
@@ -190,11 +193,11 @@ class Datafile():
         for col in col_to_del:
             df = df.drop(col, 1)
 
-        if convert_data.get('replace_name'):
-            file_name = file_name.replace(convert_data['replace_name'][0], convert_data['replace_name'][1])
+        base_file_name, file_ext = os.path.splitext(file_name)
+        if convert_data.get('append_name'):
+            file_name = base_file_name + convert_data.get('append_name') + ".csv"
         else:
-            file_name = file_name.replace(".ods", ".csv")
-
+            file_name = base_file_name + ".csv"
         new_file_path = os.path.join(self.temp_folder, file_name)
 
         df.to_csv(new_file_path, index=False, sep="\t")
@@ -240,5 +243,5 @@ class Datafile():
             print("Missing file {}".format(file_path))
             return file_path
 
-        #data = gopublic_client.file.publish(file_path, token=token)
+        data = gopublic_client.file.publish(file_path, token=token)
         return base_url + data["file_id"]
