@@ -11,7 +11,7 @@ import numpy as np
 
 class Datafile():
 
-    def __init__(self, pattern, integration_file, conversion_data, search_folder, temp_folder, askomics_client, sheet=0, gopublish_data={}, data_files={}, subset={}, validation_template=""):
+    def __init__(self, pattern, integration_file, conversion_data, search_folder, temp_folder, askomics_client, sheet=0, gopublish_data={}, data_files={}, subset={}, validation_file=""):
         current_args = locals()
         self.pattern = pattern
         self.search_folder = search_folder
@@ -23,7 +23,7 @@ class Datafile():
         self.gopublish_data = gopublish_data
         self.files_to_integrate = []
         self.temp_folder = temp_folder
-        self.validation_template = validation_template
+        self.validation_file = validation_file
 
         # Conversion data: Dict with keys:
         # sheet: 0 (optional, default to 0)
@@ -70,16 +70,16 @@ class Datafile():
             self.subdatafile.get_files()
 
     def validate(self):
-        if not self.validation_template:
+        if not self.validation_file:
             return True
         checkcels = []
         for key, value in self.files.items():
-            full_path = os.path.join(key, value)
+            full_path = os.path.join(key, value['file'])
             check = Checkcel(
                 source=full_path,
                 type="spreadsheet",
                 sheet=self.sheet
-            ).load_from_file(self.validation_template)
+            ).load_from_file(self.validation_file)
             checkcels.append(check)
         return all([filecheck.validate() for filecheck in checkcels])
 

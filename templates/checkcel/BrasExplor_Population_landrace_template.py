@@ -8,7 +8,7 @@ class MyTemplate(Checkplate):
         ("Population name", NoValidator()),
         ("Sampling date", DateValidator()),
         ("Collector", NoValidator()),
-        ("Country", SetValidator(valid_values=["Algeria", "Egypt", "France", "Italy", "Slovenia", "Tunisia"])),
+        ("Country", SetValidator(valid_values=["Algeria", "Egypt", "France", "Italy", "Slovenia", "Tunisia", "Spain"])),
         ("Region", NoValidator()),
         ("Province", NoValidator()),
         ("Locality", NoValidator()),

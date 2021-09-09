@@ -73,7 +73,7 @@ def main():
         ),
         Datafile(
           pattern="Pictures*.ods",
-          validation_file="templates/checkcel/Pictures_template.py",
+          validation_file="templates/checkcel/BrasExplor_Pictures_template.py",
           integration_file="templates/askomics/picture_asko.json",
           sheet=2,
           conversion_data={"new_uri": "picture"},
@@ -111,11 +111,12 @@ def main():
     for datafile in datafiles:
         datafile.get_files()
         if not datafile.validate():
+            print("test")
             continue
-        datafile.cleanup_askomics()
-        datafile.convert_files()
-        datafile.upload_files()
-        datafile.integrate_files()
+        #datafile.cleanup_askomics()
+        #datafile.convert_files()
+        #datafile.upload_files()
+        #datafile.integrate_files()
 
 
 if __name__ == "__main__":
