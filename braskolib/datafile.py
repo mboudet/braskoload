@@ -3,13 +3,15 @@ import os
 import json
 from urllib.parse import quote
 
+from checkcel import Checkcel
+
 import pandas
 import numpy as np
 
 
 class Datafile():
 
-    def __init__(self, pattern, integration_file, conversion_data, search_folder, temp_folder, askomics_client, gopublish_data={}, data_files={}, subset={}):
+    def __init__(self, pattern, integration_file, conversion_data, search_folder, temp_folder, askomics_client, sheet=0, gopublish_data={}, data_files={}, subset={}, validation_template=""):
         current_args = locals()
         self.pattern = pattern
         self.search_folder = search_folder
@@ -17,9 +19,11 @@ class Datafile():
         self.files = {}
         self.conversion_data = conversion_data
         self.askomics_client = askomics_client
+        self.sheet = sheet
         self.gopublish_data = gopublish_data
         self.files_to_integrate = []
         self.temp_folder = temp_folder
+        self.validation_template = validation_template
 
         # Conversion data: Dict with keys:
         # sheet: 0 (optional, default to 0)
@@ -64,6 +68,20 @@ class Datafile():
 
         if self.subdatafile:
             self.subdatafile.get_files()
+
+    def validate(self):
+        if not self.validation_template:
+            return True
+        checkcels = []
+        for key, value in self.files.items():
+            full_path = os.path.join(key, value)
+            check = Checkcel(
+                source=full_path,
+                type="spreadsheet",
+                sheet=self.sheet
+            ).load_from_file(self.validation_template)
+            checkcels.append(check)
+        return all([filecheck.validate() for filecheck in checkcels])
 
     def cleanup_askomics(self):
         datasets = self.askomics_client.dataset.list()
@@ -131,7 +149,7 @@ class Datafile():
         # add_id must be a dict, containing a column name with key "column", and optional list of values added (key "values")
         full_path = os.path.join(file_path, file_name)
         convert_data = self.conversion_data
-        df = pandas.read_excel(full_path, sheet_name=convert_data.get("sheet", 0))
+        df = pandas.read_excel(full_path, self.sheet)
         col_to_del = set()
         if len(df) == 0:
             return

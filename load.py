@@ -1,5 +1,4 @@
 import os
-import json
 import glob
 
 import askoclics
@@ -28,15 +27,16 @@ def main():
     datafiles = [
         Datafile(
           pattern="[!Forms]*/Population*W*.*",
+          validation_file="templates/checkcel/BrasExplor_Population_wild_template.py",
           integration_file="templates/askomics/population_wild_asko.json",
-          conversion_data={"sheet": 2, "new_uri": "wild_population", "drop_columns": [{"between": ["Population name", "Area (1)"]}]},
+          sheet=2,
+          conversion_data={"new_uri": "wild_population", "drop_columns": [{"between": ["Population name", "Area (1)"]}]},
           search_folder="/groups/brassica/db/projects/BrasExplor",
           temp_folder=temp_folder,
           askomics_client=asko_client,
           subset={
             "integration_file": "templates/askomics/population_base_asko.json",
             "conversion_data": {
-                "sheet": 2,
                 "append_name": "_base",
                 "add_columns": [{"from_path": -2, "replace": ["_", " "]}, {"from_path": -3}],
                 "drop_columns": [{"after": "Altitude"}]
@@ -45,15 +45,16 @@ def main():
         ),
         Datafile(
           pattern="'[!Forms]*/Population*L*.*'",
+          validation_file="templates/checkcel/BrasExplor_Population_landrace_template.py",
           integration_file="templates/askomics/population_lr_asko.json",
-          conversion_data={"sheet": 2, "new_uri": "landrace_population", "drop_columns": [{"between": ["Population name", "Area (1)"]}]},
+          sheet=2,
+          conversion_data={"new_uri": "landrace_population", "drop_columns": [{"between": ["Population name", "Area (1)"]}]},
           search_folder="/groups/brassica/db/projects/BrasExplor",
           temp_folder=temp_folder,
           askomics_client=asko_client,
           subset={
             "integration_file": "templates/askomics/population_base_asko.json",
             "conversion_data": {
-                "sheet": 2,
                 "append_name": "_base",
                 "add_columns": [{"from_path": -2, "replace": ["_", " "]}, {"from_path": -3}],
                 "drop_columns": [{"after": "Altitude"}]
@@ -62,16 +63,20 @@ def main():
         ),
         Datafile(
           pattern="Botanical_species*.ods",
+          validation_file="templates/checkcel/BrasExplor_Botanical_species_template.py",
           integration_file="templates/askomics/botanical_asko.json",
-          conversion_data={"sheet": 2, "new_uri": "botanical_density"},
+          sheet=2,
+          conversion_data={"new_uri": "botanical_density"},
           search_folder="/groups/brassica/db/projects/BrasExplor",
           temp_folder=temp_folder,
           askomics_client=asko_client
         ),
         Datafile(
           pattern="Pictures*.ods",
+          validation_file="templates/checkcel/Pictures_template.py",
           integration_file="templates/askomics/picture_asko.json",
-          conversion_data={"sheet": 2, "new_uri": "picture"},
+          sheet=2,
+          conversion_data={"new_uri": "picture"},
           search_folder="/groups/brassica/db/projects/BrasExplor",
           temp_folder=temp_folder,
           askomics_client=asko_client
@@ -105,6 +110,8 @@ def main():
 
     for datafile in datafiles:
         datafile.get_files()
+        if not datafile.validate():
+            continue
         datafile.cleanup_askomics()
         datafile.convert_files()
         datafile.upload_files()
