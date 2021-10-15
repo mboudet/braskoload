@@ -58,13 +58,9 @@ class Datafile():
                 continue
             if head not in file_dict:
                 file_dict[head] = []
-            file_dict[head].append(tail)
-        for path, names in file_dict.items():
-            latest_file = max([os.path.join(path, name) for name in names], key=os.path.getctime)
-            head, tail = os.path.split(latest_file)
-            filtered_file_dict[head] = {"file": tail, "time": os.path.getctime(latest_file)}
+            file_dict[head].append({"file": tail, "time": os.path.getctime(path)})
 
-        self.files = filtered_file_dict
+        self.files = file_dict
 
         if self.subdatafile:
             self.subdatafile.get_files()
@@ -73,14 +69,15 @@ class Datafile():
         if not self.validation_file:
             return True
         checkcels = []
-        for key, value in self.files.items():
-            full_path = os.path.join(key, value['file'])
-            check = Checkcel(
-                source=full_path,
-                type="spreadsheet",
-                sheet=self.sheet
-            ).load_from_file(self.validation_file)
-            checkcels.append(check)
+        for key, path in self.files.items():
+            for value in path:
+                full_path = os.path.join(key, value['file'])
+                check = Checkcel(
+                    source=full_path,
+                    type="spreadsheet",
+                    sheet=self.sheet
+                ).load_from_file(self.validation_file)
+                checkcels.append(check)
         return all([filecheck.validate() for filecheck in checkcels])
 
     def cleanup_askomics(self):
@@ -91,17 +88,18 @@ class Datafile():
         files_to_delete = []
         keys_to_delete = []
 
-        for key, value in self.files.items():
-            file_name = value["file"].replace(".ods", ".csv")
-            for file in files:
-                if file["name"] == file_name:
-                    if file["date"] < value["time"]:
-                        files_to_delete.append(file["id"])
-                        names_to_delete.append(file_name)
-                        print("Deleting remote obsolete file " + file_name)
-                    else:
-                        print("Skipping older local file " + file_name)
-                        keys_to_delete.append(key)
+        for key, path in self.files.items():
+            for value in path:
+                file_name = value["file"].replace(".ods", ".csv")
+                for file in files:
+                    if file["name"] == file_name:
+                        if file["date"] < value["time"]:
+                            files_to_delete.append(file["id"])
+                            names_to_delete.append(file_name)
+                            print("Deleting remote obsolete file " + file_name)
+                        else:
+                            print("Skipping older local file " + file_name)
+                            keys_to_delete.append(key)
 
         datasets_to_delete = [dataset["id"] for dataset in datasets if dataset["name"] in names_to_delete]
 
@@ -119,7 +117,8 @@ class Datafile():
 
     def convert_files(self):
         for path, file in self.files.items():
-            self._convert_file(path, file['file'])
+            for value in file:
+                self._convert_file(path, value['file'])
 
         if self.subdatafile:
             self.subdatafile.convert_files()
@@ -154,7 +153,7 @@ class Datafile():
         if len(df) == 0:
             return
 
-        # Remove unnamed column (empty columns not expected)
+        # Remove unnamed columns (empty columns not expected)
         df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
 
         # drop_columns: [{column: "XXX", "before": "xxx", "after":xxx}]
@@ -183,6 +182,12 @@ class Datafile():
             value = col.get("value")
             if col.get("from_path"):
                 value = file_path.split("/")[col.get("from_path")]
+            if col.get("from_sheet"):
+                sheet_number = col['from_sheet']['sheet']
+                value_col = col['from_sheet']['column']
+                df1 = pandas.read_excel(full_path, sheet_number)
+                value = df1[value_col].iloc[0]
+
             if col.get("replace"):
                 value = value.replace(col.get("replace")[0], col.get("replace")[1])
             if value:

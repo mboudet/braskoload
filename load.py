@@ -38,7 +38,7 @@ def main():
             "integration_file": "templates/askomics/population_base_asko.json",
             "conversion_data": {
                 "append_name": "_base",
-                "add_columns": [{"from_path": -2, "replace": ["_", " "]}, {"from_path": -3}],
+                "add_columns": [{"from_sheet": {"sheet":0, "column": "Species"}, "replace": ["_", " "]}, {"from_path": -3}],
                 "drop_columns": [{"after": "Altitude"}]
             }
           }
@@ -56,13 +56,13 @@ def main():
             "integration_file": "templates/askomics/population_base_asko.json",
             "conversion_data": {
                 "append_name": "_base",
-                "add_columns": [{"from_path": -2, "replace": ["_", " "]}, {"from_path": -3}],
+                "add_columns": [{"from_sheet": {"sheet":0, "column": "Species"}, "replace": ["_", " "]}, {"from_path": -3}],
                 "drop_columns": [{"after": "Altitude"}]
             }
           }
         ),
         Datafile(
-          pattern="Botanical_species*.ods",
+          pattern="Botanical_species_*.*",
           validation_file="templates/checkcel/BrasExplor_Botanical_species_template.py",
           integration_file="templates/askomics/botanical_asko.json",
           sheet=2,
@@ -112,10 +112,10 @@ def main():
         datafile.get_files()
         if not datafile.validate():
             continue
-        datafile.cleanup_askomics()
-        datafile.convert_files()
-        datafile.upload_files()
-        datafile.integrate_files()
+        #datafile.cleanup_askomics()
+        #datafile.convert_files()
+        #datafile.upload_files()
+        #datafile.integrate_files()
 
 
 if __name__ == "__main__":
