@@ -3,20 +3,14 @@
         "start_entity",
         "numeric",
         "general_relation", 
-        "text", 
+        "text",
         "category"
     ],
     "headers": [
         "Picture", 
         "id",
         "Population_id@Population", 
-        "Filename", 
+        "Link",
         "Picture Type"
     ]
 }
-
-
-
-
-
-

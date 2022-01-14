@@ -44,7 +44,7 @@ def main():
           }
         ),
         Datafile(
-          pattern="'[!Forms]*/Population*L*.*'",
+          pattern="[!Forms]*/Population*L*.*",
           validation_file="templates/checkcel/BrasExplor_Population_landrace_template.py",
           integration_file="templates/askomics/population_lr_asko.json",
           sheet=2,
@@ -72,14 +72,21 @@ def main():
           askomics_client=asko_client
         ),
         Datafile(
-          pattern="Pictures*.ods",
+          pattern="Pictures*.*",
           validation_file="templates/checkcel/BrasExplor_Pictures_template.py",
           integration_file="templates/askomics/picture_asko.json",
           sheet=2,
           conversion_data={"new_uri": "picture"},
           search_folder="/groups/brassica/db/projects/BrasExplor",
           temp_folder=temp_folder,
-          askomics_client=asko_client
+          askomics_client=asko_client,
+          gopublish_data=gopublish_data,
+          data_files=[{
+            "col": "Picture",
+            "gopublish": True,
+            "subfolder": "Pictures"
+            }
+          ]
         ),
         Datafile(
           pattern="test_asko.ods",
@@ -112,10 +119,10 @@ def main():
         datafile.get_files()
         if not datafile.validate():
             continue
-        #datafile.cleanup_askomics()
-        #datafile.convert_files()
-        #datafile.upload_files()
-        #datafile.integrate_files()
+        datafile.cleanup_askomics()
+        datafile.convert_files()
+        datafile.upload_files()
+        datafile.integrate_files()
 
 
 if __name__ == "__main__":

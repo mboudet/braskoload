@@ -90,7 +90,7 @@ class Datafile():
 
         for key, path in self.files.items():
             for value in path:
-                file_name = value["file"].replace(".ods", ".csv")
+                file_name = value["file"].replace(".ods", ".csv").replace(".xlsx", ".csv")
                 for file in files:
                     if file["name"] == file_name:
                         if file["date"] < value["time"]:
@@ -139,7 +139,11 @@ class Datafile():
             if file["name"] in uploaded_files:
                 file_ids.add(file["id"])
         for id in file_ids:
-            self.askomics_client.file.integrate_csv(id, columns=self.integration_template["columns"], headers=self.integration_template["headers"])
+            try:
+                self.askomics_client.file.integrate_csv(id, columns=self.integration_template["columns"], headers=self.integration_template["headers"], force=True)
+            except Exception as e:
+                print(id)
+                raise e
 
         if self.subdatafile:
             self.subdatafile.integrate_files()
@@ -211,7 +215,9 @@ class Datafile():
                     col_to_del.add(path["col_base_path"])
             if path.get("gopublish"):
                 base_path = path.get("base_path")
-                df[path["col"]] = df[path["col"]].apply(lambda x: self._get_file_uri(self.gopublish_data, base_path, x))
+                if path.get("subfolder"):
+                    base_path = os.path.join(file_path, path.get("subfolder"))
+                df[path["col"]] = df[path["col"]].apply(lambda x: self._get_file_uri(base_path, x))
 
         for col in col_to_del:
             df = df.drop(col, 1)
