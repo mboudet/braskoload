@@ -14,11 +14,14 @@ def main():
     config = configparser.ConfigParser()
     config.read("braskoload.conf")
 
-    gopublish_data = {
-        "client": gopublic.GopublishInstance(url=config['gopublish']['url'], proxy_username=config['gopublish'].get('proxy_username'), proxy_password=config['gopublish'].get('proxy_password')),
-        "token": config['gopublish']['token'],
-        "base_url": config['gopublish']['base_url']
-    }
+    gopublish_data = {}
+    
+    if config['gopublish'].get('url'):
+        gopublish_data = {
+            "client": gopublic.GopublishInstance(url=config['gopublish']['url'], proxy_username=config['gopublish'].get('proxy_username'), proxy_password=config['gopublish'].get('proxy_password')),
+            "token": config['gopublish']['token'],
+            "base_url": config['gopublish']['base_url']
+        }
 
     asko_client = askoclics.AskomicsInstance(url=config['askomics']['url'], api_key=config['askomics']['api_key'], proxy_username=config['askomics'].get('proxy_username'), proxy_password=config['askomics'].get('proxy_password'))
 
