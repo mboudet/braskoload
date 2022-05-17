@@ -7,7 +7,7 @@ class BrasExplor_Population_wild(Checkplate):
     empty_ok = True
     validators = OrderedDict([
         ("Population name", UniqueValidator()),
-        ("Sampling date", DateValidator(empty_ok=False)),
+        ("Sampling date", DateValidator()),
         ("Collector", NoValidator()),
         ("Country", SetValidator(empty_ok=False, valid_values=["Algeria", "Egypt", "France", "Italy", "Slovenia", "Tunisia", "Spain"])),
         ("Region", NoValidator()),
