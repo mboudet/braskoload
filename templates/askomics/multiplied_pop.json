@@ -1,0 +1,16 @@
+{
+    "columns": [
+        "start_entity",
+        "general_relation",
+        "category",
+        "category",
+        "category"
+    ],
+    "headers": [
+        "Multiplied population",
+        "Multiplied from@Population",
+        "Core-collection",
+        "Cultigroup",
+        "Species"
+    ]
+}

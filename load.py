@@ -51,7 +51,7 @@ def main():
           validation_file="templates/checkcel/BrasExplor_Population_landrace_template.py",
           integration_file="templates/askomics/population_lr_asko.json",
           sheet=2,
-          conversion_data={"new_uri": "landrace_population", "drop_columns": [{"between": ["Population name", "Area (1)"]}]},
+          conversion_data={"new_uri": "landrace_population", "drop_columns": [{"between": ["Population name", "Place (#1)"]}]},
           search_folder="/groups/brassica/db/projects/BrasExplor",
           temp_folder=temp_folder,
           askomics_client=asko_client,
@@ -110,6 +110,14 @@ def main():
             "delete_base": True,
             "gopublish": True
           }]
+        ),
+        Datafile(
+          pattern="multiplied_populations.xlsx",
+          conversion_data={},
+          integration_file="templates/askomics/multiplied_pop.json",
+          search_folder="/home/genouest/genouest/mboudet/test_asko",
+          temp_folder=temp_folder,
+          askomics_client=asko_client
         )
     ]
 
