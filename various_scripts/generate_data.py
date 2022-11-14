@@ -101,7 +101,7 @@ for key, value in input_data.items():
             has_block = ws['D1'].value == "Block"
             has_plant = ws['E1'].value == "Plant number"
 
-            for pop in pop_dict[col]:
+            for pop in pop_dict[entity]:
                 if has_block:
                     for block in range(1, 4):
                         if has_plant:
