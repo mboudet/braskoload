@@ -96,6 +96,7 @@ for key, value in input_data.items():
 
             wb = load_workbook(input_file)
             ws = wb['Data']
+            ws.freeze_panes = "A2"
 
             has_block = ws['D1'].value == "Block"
             has_plant = ws['E1'].value == "Plant number"
@@ -113,7 +114,6 @@ for key, value in input_data.items():
                 else:
                     write_row(ws, row, input_file, entity, pop, None, None)
                     row += 1
-            ws.freeze_pane = "A2"
             wb.save(filename=os.path.join("outputs", entity, new_file_name))
 
 for col in sites:
