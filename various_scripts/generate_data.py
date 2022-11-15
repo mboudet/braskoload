@@ -3,7 +3,8 @@ import os
 from openpyxl import load_workbook
 from checkcel import Checkerator
 
-envoi_file = "/home/mboudet/Téléchargements/info_envoi.xlsx"
+envoi_file = "../../info_envoi.xlsx"
+base_template = "../../checkcel_templates/BrasExplor/WP3"
 os.makedirs("outputs", exist_ok=True)
 
 
@@ -65,8 +66,6 @@ input_data = {
     }
 }
 
-base_template = "/home/mboudet/Bureau/checkcel_templates/BrasExplor/WP3"
-
 for val in input_data.values():
     for output in val['input_files']:
         check = Checkerator(output=output)
@@ -114,7 +113,7 @@ for key, value in input_data.items():
                 else:
                     write_row(ws, row, input_file, entity, pop, None, None)
                     row += 1
-
+            ws.freeze_pane = "A2"
             wb.save(filename=os.path.join("outputs", entity, new_file_name))
 
 for col in sites:
