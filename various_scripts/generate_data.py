@@ -36,11 +36,12 @@ def write_row(ws, row, input_file, entity, population, block, plant):
     ws["A{}".format(row)] = id
     ws["B{}".format(row)] = population
     ws["C{}".format(row)] = entity
+    ws["D{}".format(row)] = "Sample"
 
     if block:
-        ws["D{}".format(row)] = block
+        ws["E{}".format(row)] = block
         if plant:
-            ws["E{}".format(row)] = plant
+            ws["F{}".format(row)] = plant
 
 
 input_data = {
