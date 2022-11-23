@@ -99,8 +99,8 @@ for key, value in input_data.items():
             ws = wb['Data']
             ws.freeze_panes = "A2"
 
-            has_block = ws['D1'].value == "Block"
-            has_plant = ws['E1'].value == "Plant number"
+            has_block = ws['E1'].value == "Block"
+            has_plant = ws['F1'].value == "Plant number"
 
             for pop in pop_dict[entity]:
                 if has_block:
