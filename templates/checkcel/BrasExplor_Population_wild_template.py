@@ -42,7 +42,7 @@ class BrasExplor_Population_wild(Checkplate):
         ("Source rock surface (24)", IntValidator(min=0, max=100)),
         ("Pierraille surface (25)", IntValidator(min=0, max=100)),
         ("Sand surface (26)", IntValidator(min=0, max=100)),
-        ("Vegetation surface (27)", IntValidator(min=1, max=100)),
+        ("Vegetation surface (27)", IntValidator(min=0, max=100)),
         ("Color (28)", SetValidator(valid_values=["Black", "Red/Brown", "Brown", "clear"])),
         ("Soil sampling (29)", SetValidator(valid_values=["yes", "no"])),
         ("Soil remarks (30)", NoValidator()),
