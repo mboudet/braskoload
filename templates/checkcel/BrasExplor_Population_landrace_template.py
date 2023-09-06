@@ -38,7 +38,7 @@ class MyTemplate(Checkplate):
         ("Forage (#14)", SetValidator(valid_values=["no", "yes", ""])),
         ("Part used (#15)", SetValidator(valid_values=["root", "leaves", "roots + leaves", "other"])),
         ("Number of recipes (#16)", IntValidator(min=0)),
-        ("Destination (#17)", SetValidator(valid_values=["family", "local market", "elsewhere market", ""])),
+        ("Destination (#17)", SetValidator(valid_values=["family", "local market", "elsewhere market", "", "family and local market"])),
         ("Destination where (#17)", NoValidator()),
         ("Destination how (#17)", NoValidator()),
         ("Taste qualities (#18)", NoValidator()),
