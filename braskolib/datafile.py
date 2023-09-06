@@ -74,9 +74,9 @@ class Datafile():
                 full_path = os.path.join(key, value['file'])
                 check = Checkcel(
                     source=full_path,
-                    type="spreadsheet",
+                    format="spreadsheet",
                     sheet=self.sheet
-                ).load_from_file(self.validation_file)
+                ).load_from_python_file(self.validation_file)
                 checkcels.append(check)
         return all([filecheck.validate() for filecheck in checkcels])
 
@@ -269,8 +269,15 @@ class Datafile():
             file_path = os.path.join(base_path, file_path)
 
         if not os.path.exists(file_path):
-            print("Missing file {}".format(file_path))
-            return file_path
+            # Hacky hacky
+            if '.jpg' in file_path:
+                file_path = file_path.replace(".jpg", ".JPG")
+            elif ".JPG" in file_path:
+                file_path = file_path.replace(".JPG", ".jpg")
+
+            if not os.path.exists(file_path):
+                print("Missing file {}".format(file_path))
+                return file_path
 
         data = gopublic_client.file.publish(file_path, token=token)
         return base_url + data["file_id"]
