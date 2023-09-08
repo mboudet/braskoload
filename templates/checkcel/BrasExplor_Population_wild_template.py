@@ -25,7 +25,7 @@ class BrasExplor_Population_wild(Checkplate):
         ("Animals (8)", IntValidator(min=0, max=9)),
         ("Soil work (9)", SetValidator(valid_values=["Not determined", "No soil work", "Cultivated field with plowing"])),
         ("Irrigation (10)", SetValidator(valid_values=["no", "yes"])),
-        ("Weeding (11)", SetValidator(valid_values=["No", "Chemical", "Mechanical"])),
+        ("Weeding (11)", SetValidator(valid_values=["No", "Chemical", "Mechanical", "Chemical and mechanical"])),
         ("Artificiality (12)", IntValidator(min=1, max=7)),
         ("Land use comments", NoValidator()),
         ("Station (13)", SetValidator(valid_values=["Sheltered", "Protected", "Open"])),
